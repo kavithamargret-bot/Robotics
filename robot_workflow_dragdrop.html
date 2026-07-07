@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Workflow Activity</title>
+
+<style>
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#eef5ff;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+    color:#003366;
+}
+
+p{
+    text-align:center;
+}
+
+.container{
+    display:flex;
+    justify-content:space-between;
+    margin-top:30px;
+}
+
+.left,.right{
+    width:45%;
+}
+
+.card{
+    background:#4CAF50;
+    color:white;
+    padding:12px;
+    margin:10px;
+    border-radius:8px;
+    cursor:grab;
+    font-size:18px;
+    text-align:center;
+}
+
+.card:hover{
+    background:#43a047;
+}
+
+.dropzone{
+    background:white;
+    border:3px dashed #888;
+    border-radius:8px;
+    height:70px;
+    margin:15px 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.correct{
+    background:#c8f7c5;
+    border:3px solid green;
+}
+
+.wrong{
+    background:#ffd6d6;
+    border:3px solid red;
+}
+
+.buttons{
+    text-align:center;
+    margin-top:30px;
+}
+
+button{
+    padding:12px 25px;
+    margin:10px;
+    font-size:18px;
+    cursor:pointer;
+    border:none;
+    border-radius:6px;
+    color:white;
+}
+
+.check{
+    background:#2196F3;
+}
+
+.reset{
+    background:#f44336;
+}
+
+#score{
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    color:#003366;
+    margin-top:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🤖 Arrange the Robot Workflow</h1>
+
+<p><b>Drag each workflow step into the correct empty block.</b></p>
+
+<div class="container">
+
+<div class="left">
+
+<div class="card" draggable="true" id="planning">🛣️ Path Planning</div>
+
+<div class="card" draggable="true" id="decision">🧠 Decision Making</div>
+
+<div class="card" draggable="true" id="mapping">🗺️ Mapping</div>
+
+<div class="card" draggable="true" id="localization">📍 Localization</div>
+
+<div class="card" draggable="true" id="obstacle">🚧 Obstacle Avoidance</div>
+
+</div>
+
+
+<div class="right">
+
+<div class="dropzone" data-answer="mapping">
+1️⃣ Create a map of the environment.
+</div>
+
+<div class="dropzone" data-answer="localization">
+2️⃣ Determine the robot's position.
+</div>
+
+<div class="dropzone" data-answer="planning">
+3️⃣ Find the optimal route.
+</div>
+
+<div class="dropzone" data-answer="obstacle">
+4️⃣ Detect and avoid obstacles.
+</div>
+
+<div class="dropzone" data-answer="decision">
+5️⃣ Choose the best action.
+</div>
+
+</div>
+
+</div>
+
+<div class="buttons">
+
+<button class="check" onclick="checkAnswers()">Check Answer</button>
+
+<button class="reset" onclick="location.reload()">Reset</button>
+
+</div>
+
+<div id="score"></div>
+
+<script>
+
+let dragged;
+
+document.querySelectorAll('.card').forEach(card=>{
+
+card.addEventListener('dragstart',function(e){
+dragged=this;
+});
+
+});
+
+document.querySelectorAll('.dropzone').forEach(zone=>{
+
+zone.addEventListener('dragover',function(e){
+e.preventDefault();
+});
+
+zone.addEventListener('drop',function(e){
+
+e.preventDefault();
+
+if(this.children.length==0){
+
+this.appendChild(dragged);
+
+}
+
+});
+
+});
+
+function checkAnswers(){
+
+let total=0;
+
+document.querySelectorAll('.dropzone').forEach(zone=>{
+
+zone.classList.remove("correct");
+zone.classList.remove("wrong");
+
+if(zone.children.length>0){
+
+let id=zone.children[0].id;
+
+if(id==zone.dataset.answer){
+
+zone.classList.add("correct");
+total++;
+
+}else{
+
+zone.classList.add("wrong");
+
+}
+
+}else{
+
+zone.classList.add("wrong");
+
+}
+
+});
+
+document.getElementById("score").innerHTML=
+"Score : "+total+" / 5";
+
+if(total==5){
+
+alert("🎉 Excellent! Robot Workflow is Correct.");
+
+}else{
+
+alert("Try Again!");
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
