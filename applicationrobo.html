@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>History of Robots - Timeline Activity</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eef5ff;
+margin:0;
+padding:20px;
+}
+
+h1{
+text-align:center;
+color:#003366;
+}
+
+h3{
+text-align:center;
+color:#444;
+}
+
+.container{
+display:flex;
+justify-content:space-around;
+margin-top:30px;
+}
+
+.events{
+width:40%;
+}
+
+.timeline{
+width:45%;
+}
+
+.card{
+background:white;
+padding:15px;
+margin:10px;
+border-radius:10px;
+cursor:grab;
+border-left:8px solid #1e88e5;
+box-shadow:0px 3px 8px rgba(0,0,0,.2);
+}
+
+.dropzone{
+height:70px;
+margin:12px;
+background:white;
+border:3px dashed #999;
+border-radius:10px;
+padding:10px;
+font-size:18px;
+display:flex;
+align-items:center;
+}
+
+.correct{
+background:#c8f7c5;
+border:3px solid green;
+}
+
+button{
+
+padding:12px 30px;
+font-size:18px;
+background:#1565c0;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+button:hover{
+
+background:#0d47a1;
+
+}
+
+#result{
+
+font-size:22px;
+font-weight:bold;
+text-align:center;
+margin-top:20px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🤖 History of Robots Timeline Activity</h1>
+
+<h3>Drag each event to the correct year.</h3>
+
+<div class="container">
+
+<div class="events">
+
+<div class="card" draggable="true" id="e1">
+Leonardo designs the Mechanical Knight
+</div>
+
+<div class="card" draggable="true" id="e2">
+Karel Čapek introduces the word "Robot"
+</div>
+
+<div class="card" draggable="true" id="e3">
+Ray Goertz develops the Teleoperator
+</div>
+
+<div class="card" draggable="true" id="e4">
+George Devol patents Unimate
+</div>
+
+<div class="card" draggable="true" id="e5">
+Joseph Engelberger founds Unimation
+</div>
+
+<div class="card" draggable="true" id="e6">
+Unimate installed at General Motors
+</div>
+
+<div class="card" draggable="true" id="e7">
+Shakey - First AI Robot
+</div>
+
+<div class="card" draggable="true" id="e8">
+Stanford Cart demonstrates autonomous navigation
+</div>
+
+<div class="card" draggable="true" id="e9">
+Honda introduces ASIMO
+</div>
+
+<div class="card" draggable="true" id="e10">
+Tesla Optimus & Figure AI Humanoid Robots
+</div>
+
+</div>
+
+<div class="timeline">
+
+<div class="dropzone" data-answer="e1">
+1495
+</div>
+
+<div class="dropzone" data-answer="e2">
+1921
+</div>
+
+<div class="dropzone" data-answer="e3">
+1948
+</div>
+
+<div class="dropzone" data-answer="e4">
+1954
+</div>
+
+<div class="dropzone" data-answer="e5">
+1956
+</div>
+
+<div class="dropzone" data-answer="e6">
+1961
+</div>
+
+<div class="dropzone" data-answer="e7">
+1966
+</div>
+
+<div class="dropzone" data-answer="e8">
+1979
+</div>
+
+<div class="dropzone" data-answer="e9">
+2000
+</div>
+
+<div class="dropzone" data-answer="e10">
+2023
+</div>
+
+</div>
+
+</div>
+
+<center>
+
+<button onclick="checkAnswers()">
+Check Answers
+</button>
+
+</center>
+
+<div id="result"></div>
+
+<script>
+
+let cards=document.querySelectorAll(".card");
+
+cards.forEach(card=>{
+
+card.addEventListener("dragstart",dragStart);
+
+});
+
+function dragStart(e){
+
+e.dataTransfer.setData("text",e.target.id);
+
+}
+
+let zones=document.querySelectorAll(".dropzone");
+
+zones.forEach(zone=>{
+
+zone.addEventListener("dragover",e=>{
+
+e.preventDefault();
+
+});
+
+zone.addEventListener("drop",drop);
+
+});
+
+function drop(e){
+
+e.preventDefault();
+
+let id=e.dataTransfer.getData("text");
+
+let card=document.getElementById(id);
+
+e.target.innerHTML="<b>"+e.target.innerHTML+"</b><br>"+card.innerHTML;
+
+e.target.dataset.user=id;
+
+card.style.display="none";
+
+}
+
+function checkAnswers(){
+
+let score=0;
+
+zones.forEach(z=>{
+
+if(z.dataset.user==z.dataset.answer){
+
+score++;
+
+z.classList.add("correct");
+
+}
+
+});
+
+if(score==10){
+
+document.getElementById("result").innerHTML=
+"🎉 Excellent! You correctly completed the History of Robots Timeline.";
+
+}
+else{
+
+document.getElementById("result").innerHTML=
+"✅ You got "+score+" / 10 correct. Try again!";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
