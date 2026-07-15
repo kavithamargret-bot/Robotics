@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Robot Game</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:linear-gradient(#d7f3ff,#ffffff);
+text-align:center;
+margin:0;
+}
+
+h1{
+background:#1976d2;
+color:white;
+padding:15px;
+margin:0;
+}
+
+#score{
+font-size:24px;
+font-weight:bold;
+color:#1976d2;
+margin:15px;
+}
+
+.robot{
+position:relative;
+width:220px;
+height:420px;
+margin:auto;
+}
+
+/* Head */
+
+.head{
+width:100px;
+height:90px;
+background:#8fd3ff;
+border-radius:15px;
+position:absolute;
+left:60px;
+top:0;
+border:3px solid black;
+}
+
+.eye{
+width:12px;
+height:12px;
+background:black;
+border-radius:50%;
+position:absolute;
+top:30px;
+animation:blink 4s infinite;
+}
+
+.left{left:25px;}
+.right{right:25px;}
+
+@keyframes blink{
+0%,45%,55%,100%{height:12px;}
+50%{height:2px;}
+}
+
+/* Camera */
+
+.camera{
+width:20px;
+height:20px;
+background:red;
+border-radius:50%;
+position:absolute;
+left:40px;
+top:-10px;
+cursor:pointer;
+animation:flash 2s infinite;
+}
+
+@keyframes flash{
+
+50%{
+box-shadow:0 0 25px red;
+}
+
+}
+
+/* Body */
+
+.body{
+width:120px;
+height:140px;
+background:#a8dcff;
+position:absolute;
+top:100px;
+left:50px;
+border-radius:15px;
+border:3px solid black;
+}
+
+/* Controller */
+
+.controller{
+
+width:70px;
+margin:auto;
+margin-top:20px;
+padding:8px;
+background:gold;
+cursor:pointer;
+border-radius:10px;
+
+}
+
+/* Battery */
+
+.battery{
+
+width:60px;
+margin:auto;
+margin-top:40px;
+padding:6px;
+background:limegreen;
+cursor:pointer;
+border-radius:8px;
+
+}
+
+/* Arms */
+
+.arm{
+
+width:18px;
+height:90px;
+background:#8fd3ff;
+position:absolute;
+top:110px;
+transform-origin:top;
+animation:wave 2s infinite alternate;
+
+}
+
+.leftarm{left:20px;}
+.rightarm{right:20px;}
+
+@keyframes wave{
+
+from{transform:rotate(-25deg);}
+to{transform:rotate(25deg);}
+
+}
+
+.hand{
+
+width:28px;
+height:12px;
+background:#555;
+position:absolute;
+bottom:-10px;
+left:-5px;
+
+}
+
+/* Legs */
+
+.leg{
+
+width:18px;
+height:90px;
+background:#8fd3ff;
+position:absolute;
+top:240px;
+
+}
+
+.leftleg{left:75px;}
+.rightleg{right:75px;}
+
+.wheel{
+
+width:35px;
+height:35px;
+background:black;
+border-radius:50%;
+position:absolute;
+bottom:-20px;
+left:-8px;
+animation:spin 1s linear infinite;
+cursor:pointer;
+
+}
+
+@keyframes spin{
+
+100%{transform:rotate(360deg);}
+
+}
+
+#message{
+
+width:70%;
+margin:30px auto;
+padding:20px;
+background:white;
+border-radius:12px;
+box-shadow:0 0 10px gray;
+font-size:22px;
+
+}
+
+button{
+
+padding:12px 25px;
+font-size:18px;
+background:#1976d2;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🤖 Touch the Robot Game</h1>
+
+<div id="score">⭐ Score : 0</div>
+
+<h2 id="task">
+
+Touch the CAMERA to start the mission.
+
+</h2>
+
+<div class="robot">
+
+<div class="head">
+
+<div class="camera"
+onclick="camera()"></div>
+
+<div class="eye left"></div>
+
+<div class="eye right"></div>
+
+</div>
+
+<div class="body">
+
+<div class="controller"
+onclick="controller()">
+
+Controller
+
+</div>
+
+<div class="battery"
+onclick="battery()">
+
+Battery
+
+</div>
+
+</div>
+
+<div class="arm leftarm"
+onclick="motor()">
+
+<div class="hand"></div>
+
+</div>
+
+<div class="arm rightarm"
+onclick="gripper()">
+
+<div class="hand"></div>
+
+</div>
+
+<div class="leg leftleg">
+
+<div class="wheel"
+onclick="wheel()"></div>
+
+</div>
+
+<div class="leg rightleg">
+
+<div class="wheel"
+onclick="wheel()"></div>
+
+</div>
+
+</div>
+
+<div id="message">
+
+Click the robot to begin.
+
+</div>
+
+<script>
+
+let score=0;
+let step=1;
+
+function addScore(){
+
+score+=10;
+document.getElementById("score").innerHTML="⭐ Score : "+score;
+
+}
+
+function camera(){
+
+if(step!=1) return;
+
+addScore();
+
+document.getElementById("message").innerHTML=
+"📷 Camera Activated<br><br>Object Detected!";
+
+document.getElementById("task").innerHTML=
+"Now touch the CONTROLLER";
+
+step=2;
+
+}
+
+function controller(){
+
+if(step!=2) return;
+
+addScore();
+
+document.getElementById("message").innerHTML=
+"🧠 Controller Planning Path";
+
+document.getElementById("task").innerHTML=
+"Touch the MOTOR";
+
+step=3;
+
+}
+
+function motor(){
+
+if(step!=3) return;
+
+addScore();
+
+document.getElementById("message").innerHTML=
+"⚙ Motor Running...";
+
+document.getElementById("task").innerHTML=
+"Touch the GRIPPER";
+
+step=4;
+
+}
+
+function gripper(){
+
+if(step!=4) return;
+
+addScore();
+
+document.getElementById("message").innerHTML=
+"✋ Object Picked Successfully";
+
+document.getElementById("task").innerHTML=
+"Touch the WHEEL";
+
+step=5;
+
+}
+
+function wheel(){
+
+if(step!=5) return;
+
+addScore();
+
+document.getElementById("message").innerHTML=
+"🎉 Mission Completed!<br><br>Robot Delivered the Box.";
+
+document.getElementById("task").innerHTML=
+"Congratulations 🎊";
+
+}
+
+function battery(){
+
+document.getElementById("message").innerHTML=
+"🔋 Battery Fully Charged ⚡";
+
+}
+
+</script>
+
+</body>
+</html>
