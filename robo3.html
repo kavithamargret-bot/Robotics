@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hierarchical Robot Architecture</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#eef7ff;
+    text-align:center;
+}
+
+.container{
+    width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 0 15px gray;
+}
+
+h1{
+    color:#0a5fa8;
+}
+
+#robot{
+    font-size:90px;
+    transition:1s;
+}
+
+.area{
+    display:flex;
+    justify-content:space-around;
+    margin-top:20px;
+}
+
+.box{
+    width:220px;
+    height:150px;
+    border:3px solid gray;
+    border-radius:10px;
+    padding:10px;
+}
+
+.active{
+    background:#c8ffd4;
+    border-color:green;
+}
+
+button{
+    padding:12px 25px;
+    margin:10px;
+    font-size:18px;
+    cursor:pointer;
+}
+
+#message{
+    font-size:22px;
+    margin-top:20px;
+    color:#004080;
+    min-height:80px;
+}
+
+.progress{
+    width:80%;
+    height:25px;
+    background:#ddd;
+    margin:auto;
+    border-radius:20px;
+}
+
+#bar{
+    width:0%;
+    height:25px;
+    background:#2ecc71;
+    border-radius:20px;
+    transition:1s;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🤖 Hierarchical (Deliberative) Robot</h1>
+
+<h2>SENSE → PLAN → ACT</h2>
+
+<div id="robot">🤖</div>
+
+<div class="progress">
+<div id="bar"></div>
+</div>
+
+<br>
+
+<div class="area">
+
+<div class="box" id="senseBox">
+<h2>📷 SENSE</h2>
+Robot scans the warehouse.
+</div>
+
+<div class="box" id="planBox">
+<h2>🧠 PLAN</h2>
+Robot calculates the best path.
+</div>
+
+<div class="box" id="actBox">
+<h2>🚗 ACT</h2>
+Robot follows the planned path.
+</div>
+
+</div>
+
+<br>
+
+<button onclick="sense()">1️⃣ Sense</button>
+
+<button onclick="plan()">2️⃣ Plan</button>
+
+<button onclick="act()">3️⃣ Act</button>
+
+<button onclick="resetAll()">🔄 Reset</button>
+
+<div id="message">
+
+Click "Sense" to begin.
+
+</div>
+
+</div>
+
+<script>
+
+let stage=0;
+
+function clearBoxes(){
+
+document.getElementById("senseBox").className="box";
+document.getElementById("planBox").className="box";
+document.getElementById("actBox").className="box";
+
+}
+
+function sense(){
+
+clearBoxes();
+
+stage=1;
+
+document.getElementById("senseBox").classList.add("active");
+
+document.getElementById("bar").style.width="33%";
+
+document.getElementById("message").innerHTML=
+"📷 <b>SENSE:</b><br><br>The robot reads sensors (Camera, LiDAR, Ultrasonic) and builds a map of the warehouse.";
+
+}
+
+function plan(){
+
+if(stage<1){
+
+alert("Perform SENSE first!");
+
+return;
+
+}
+
+clearBoxes();
+
+stage=2;
+
+document.getElementById("planBox").classList.add("active");
+
+document.getElementById("bar").style.width="66%";
+
+document.getElementById("message").innerHTML=
+"🧠 <b>PLAN:</b><br><br>The robot computes the shortest path to Shelf B7 using the warehouse map.";
+
+}
+
+function act(){
+
+if(stage<2){
+
+alert("Perform PLAN first!");
+
+return;
+
+}
+
+clearBoxes();
+
+stage=3;
+
+document.getElementById("actBox").classList.add("active");
+
+document.getElementById("bar").style.width="100%";
+
+document.getElementById("robot").style.transform="translateX(250px)";
+
+document.getElementById("message").innerHTML=
+"🚗 <b>ACT:</b><br><br>The robot executes the planned path and reaches the destination.";
+
+}
+
+function resetAll(){
+
+stage=0;
+
+clearBoxes();
+
+document.getElementById("robot").style.transform="translateX(0px)";
+
+document.getElementById("bar").style.width="0%";
+
+document.getElementById("message").innerHTML=
+'Click "Sense" to begin.';
+
+}
+
+</script>
+
+</body>
+</html>
