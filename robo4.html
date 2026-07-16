@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hierarchical Robot - Path Planning</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#eef7ff;
+    text-align:center;
+}
+
+h1{
+    color:#0055aa;
+}
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(5,70px);
+    grid-gap:5px;
+    justify-content:center;
+    margin-top:20px;
+}
+
+.cell{
+    width:70px;
+    height:70px;
+    border:2px solid #999;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:28px;
+    cursor:pointer;
+    background:white;
+}
+
+.wall{
+    background:#555;
+}
+
+.path{
+    background:#90EE90;
+}
+
+.robot{
+    background:#4da6ff;
+    color:white;
+}
+
+.goal{
+    background:#ffd966;
+}
+
+button{
+    margin:15px;
+    padding:12px 25px;
+    font-size:18px;
+}
+
+#status{
+    font-size:22px;
+    color:#004080;
+    margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Hierarchical (Deliberative) Robot</h1>
+<h2>PLAN Stage - Shortest Path</h2>
+
+<div id="grid"></div>
+
+<button onclick="planPath()">🧠 Find Shortest Path</button>
+
+<button onclick="moveRobot()">🤖 Move Robot</button>
+
+<button onclick="location.reload()">🔄 Reset</button>
+
+<div id="status">
+Click black cells to create obstacles, then press "Find Shortest Path".
+</div>
+
+<script>
+
+const rows=5;
+const cols=5;
+
+let start=[0,0];
+let goal=[4,4];
+let path=[];
+
+const grid=document.getElementById("grid");
+
+let cells=[];
+
+for(let r=0;r<rows;r++){
+
+cells[r]=[];
+
+for(let c=0;c<cols;c++){
+
+let div=document.createElement("div");
+div.className="cell";
+
+if(r==0 && c==0){
+div.innerHTML="S";
+div.classList.add("robot");
+}
+
+else if(r==4 && c==4){
+div.innerHTML="G";
+div.classList.add("goal");
+}
+
+else{
+
+div.onclick=function(){
+
+div.classList.toggle("wall");
+
+};
+
+}
+
+grid.appendChild(div);
+
+cells[r][c]=div;
+
+}
+
+}
+
+function neighbors(r,c){
+
+let list=[];
+
+[[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{
+
+let nr=r+d[0];
+let nc=c+d[1];
+
+if(nr>=0 && nr<rows && nc>=0 && nc<cols){
+
+if(!cells[nr][nc].classList.contains("wall"))
+
+list.push([nr,nc]);
+
+}
+
+});
+
+return list;
+
+}
+
+function planPath(){
+
+path=[];
+
+let queue=[[0,0]];
+let visited={};
+let parent={};
+
+visited["0,0"]=true;
+
+while(queue.length){
+
+let node=queue.shift();
+
+if(node[0]==4 && node[1]==4)break;
+
+neighbors(node[0],node[1]).forEach(n=>{
+
+let key=n[0]+","+n[1];
+
+if(!visited[key]){
+
+visited[key]=true;
+
+parent[key]=node;
+
+queue.push(n);
+
+}
+
+});
+
+}
+
+let cur=[4,4];
+
+while(cur){
+
+path.unshift(cur);
+
+let key=cur[0]+","+cur[1];
+
+cur=parent[key];
+
+}
+
+for(let i=1;i<path.length-1;i++){
+
+cells[path[i][0]][path[i][1]].classList.add("path");
+
+}
+
+document.getElementById("status").innerHTML=
+"🧠 Path Planned successfully! Length = "+path.length+" cells.";
+
+}
+
+async function moveRobot(){
+
+if(path.length==0){
+
+alert("Plan first!");
+
+return;
+
+}
+
+for(let i=0;i<path.length;i++){
+
+let r=path[i][0];
+let c=path[i][1];
+
+if(!(r==4&&c==4)){
+
+cells[r][c].innerHTML="🤖";
+
+await new Promise(x=>setTimeout(x,400));
+
+if(!(r==0&&c==0))
+cells[r][c].innerHTML="";
+
+}
+
+}
+
+cells[4][4].innerHTML="🏁";
+
+document.getElementById("status").innerHTML=
+"✅ Robot reached Shelf B7 using the planned shortest path.";
+
+}
+
+</script>
+
+</body>
+</html>
