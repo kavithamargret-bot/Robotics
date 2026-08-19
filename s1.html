@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware &amp; Software Integration — Quiz</title>
+<style>
+  :root{
+    --bg: #0b1520;
+    --panel: #0f1d2b;
+    --panel-2: #13273a;
+    --line: #1f3a4d;
+    --teal: #2ea89a;
+    --teal-dim: #1c5f57;
+    --amber: #e0a84c;
+    --text: #eaf1f2;
+    --text-dim: #93a9b2;
+    --wrong: #d9695a;
+    --right: #2ea89a;
+    --trace: #17384a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", "Segoe UI", -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      linear-gradient(var(--trace) 1px, transparent 1px),
+      linear-gradient(90deg, var(--trace) 1px, transparent 1px);
+    background-size: 42px 42px;
+    background-position: -1px -1px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 20px 80px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* --- header / signature element --- */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .eyebrow .chip {
+    width: 8px; height: 8px;
+    background: var(--amber);
+    border-radius: 1px;
+    box-shadow: 0 0 0 3px rgba(224,168,76,0.15);
+  }
+
+  h1 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    line-height: 1.25;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14.5px;
+    margin: 0 0 28px;
+    max-width: 46ch;
+  }
+
+  /* --- circuit connector row (signature) --- */
+  .bus {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 30px;
+    height: 20px;
+  }
+  .bus .seg {
+    flex: 1;
+    height: 2px;
+    background: var(--line);
+    position: relative;
+  }
+  .bus .seg.done { background: var(--teal-dim); }
+  .bus .node {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 2px solid var(--line);
+    flex-shrink: 0;
+    transition: all .25s ease;
+  }
+  .bus .node.done {
+    background: var(--teal);
+    border-color: var(--teal);
+    box-shadow: 0 0 0 4px rgba(46,168,154,0.18);
+  }
+  .bus .node.current {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 4px rgba(224,168,76,0.2);
+  }
+
+  /* --- card --- */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 30px 28px 26px;
+    position: relative;
+  }
+
+  .qcount {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+  }
+
+  .prompt {
+    font-size: 19px;
+    line-height: 1.45;
+    font-weight: 500;
+    margin: 0 0 22px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .option {
+    text-align: left;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.4;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--teal-dim);
+    background: #16324590;
+  }
+  .option:disabled { cursor: default; }
+
+  .option .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+
+  .option.correct {
+    border-color: var(--right);
+    background: rgba(46,168,154,0.12);
+  }
+  .option.correct .tag { border-color: var(--right); color: var(--right); }
+
+  .option.incorrect {
+    border-color: var(--wrong);
+    background: rgba(217,105,90,0.1);
+  }
+  .option.incorrect .tag { border-color: var(--wrong); color: var(--wrong); }
+
+  .hint-row {
+    margin-top: 16px;
+  }
+  .hint-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    font-family: inherit;
+  }
+  .hint-btn:hover { color: var(--amber); }
+  .hint-text {
+    font-size: 13.5px;
+    color: var(--amber);
+    margin-top: 8px;
+    display: none;
+    font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .verdict {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .verdict.right { color: var(--right); }
+  .verdict.wrong { color: var(--wrong); }
+  .explanation {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--text-dim);
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+  .next-btn {
+    background: var(--teal);
+    color: #05221e;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 11px 22px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: inherit;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .next-btn.show { opacity: 1; pointer-events: auto; }
+  .next-btn:hover { background: #38bfae; }
+
+  /* --- results screen --- */
+  .results { text-align: left; }
+  .score-big {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--teal);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .score-label {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 26px;
+  }
+  .review-item {
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .review-item:last-child { padding-bottom: 0; }
+  .review-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .review-dot.right { background: var(--right); }
+  .review-dot.wrong { background: var(--wrong); }
+  .review-q { font-size: 14px; line-height: 1.4; }
+  .review-q .num { color: var(--text-dim); font-family: "IBM Plex Mono", monospace; font-size: 12px; margin-right: 6px; }
+
+  .restart-row { margin-top: 28px; display: flex; gap: 10px; }
+  .restart-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 11px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .restart-btn:hover { border-color: var(--teal-dim); }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 26px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 18px 22px; }
+    h1 { font-size: 23px; }
+    .score-big { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="eyebrow"><span class="chip"></span> MODULE QUIZ · SYSTEMS INTEGRATION</div>
+  <h1>Hardware &amp; Software Integration</h1>
+  <p class="subtitle">8 questions covering the integration stack, ROS publish–subscribe, the sense–plan–act loop, and common failure modes.</p>
+
+  <div class="bus" id="bus"></div>
+
+  <div class="card" id="card"></div>
+
+  <footer>Score is not saved — reload to reset.</footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    prompt: "What is hardware/software integration, as defined in the lecture?",
+    options: [
+      "Installing new software updates onto a robot's processor",
+      "Connecting physical components with the drivers, middleware, and algorithms that command them so they behave as one coherent system",
+      "Testing a robot's hardware in a simulated environment",
+      "Writing firmware for a single sensor"
+    ],
+    correct: 1,
+    hint: "Think about what connects the physical robot to its control code.",
+    explanation: "Integration is specifically about connecting physical components (sensors, actuators, processors) with the software layers that command them, so the two sides work as one unified system."
+  },
+  {
+    prompt: "Why is hardware/software integration described as fundamentally 'hard'?",
+    options: [
+      "Because hardware is always more expensive than software",
+      "Because most robots use too many sensors",
+      "Because hardware operates in real, physical time with electrical constraints, while software operates in logical, discrete time",
+      "Because middleware frameworks are difficult to install"
+    ],
+    correct: 2,
+    hint: "It's about two different kinds of 'time.'",
+    explanation: "The core difficulty is the mismatch between physical time (continuous, governed by electrical/mechanical constraints) and logical time (discrete, instruction-based). Integration is the engineering work done at that boundary."
+  },
+  {
+    prompt: "Put the integration stack in order, from bottom (Layer 1) to top (Layer 4):",
+    options: [
+      "Application → Middleware → Drivers/Firmware → Physical Hardware",
+      "Physical Hardware → Drivers/Firmware → Middleware → Application",
+      "Middleware → Physical Hardware → Application → Drivers/Firmware",
+      "Drivers/Firmware → Application → Physical Hardware → Middleware"
+    ],
+    correct: 1,
+    hint: "Which layer is closest to the wires, and which is closest to decision-making?",
+    explanation: "The stack runs 'copper to cognition': physical hardware (1) → drivers/firmware (2) → middleware (3) → application (4, perception/planning/control)."
+  },
+  {
+    prompt: "In the ROS example, a Camera Node publishes images to a topic. What is it called, and who reads from it?",
+    options: [
+      "\"/image_raw\" — read only by the Perception Node",
+      "\"/camera_feed\" — read by all nodes automatically",
+      "\"/image_raw\" — subscribed to by both a Perception Node and a Recorder Node",
+      "\"/perception\" — published to by the Perception Node"
+    ],
+    correct: 2,
+    hint: "Two different node types subscribe to the same topic in the example.",
+    explanation: "The Camera Node publishes to \"/image_raw\", and both a Perception Node and a Recorder Node independently subscribe to it — neither knows about the other."
+  },
+  {
+    prompt: "Why does ROS's publish–subscribe model make integration easier?",
+    options: [
+      "It forces all nodes to run on the same physical processor",
+      "Nodes never call one another directly, so components can be swapped independently as long as the message format stays the same",
+      "It eliminates the need for drivers entirely",
+      "It guarantees zero latency between sensing and acting"
+    ],
+    correct: 1,
+    hint: "Think about what happens when nothing calls anything else directly.",
+    explanation: "Because nodes communicate only through named topics rather than direct calls, you can swap a camera model or rewrite a software node without touching the other side — as long as the topic's message format is preserved."
+  },
+  {
+    prompt: "What are the three steps of the sense–plan–act cycle, in order?",
+    options: [
+      "Plan → Sense → Act",
+      "Sense → Plan → Act",
+      "Act → Sense → Plan",
+      "Sense → Act → Plan"
+    ],
+    correct: 1,
+    hint: "You need to know what's happening before you can decide, and decide before you can act.",
+    explanation: "Sensors read the environment (SENSE), software fuses the data and decides an action (PLAN), and actuators execute the command, changing the environment (ACT) — then the cycle repeats."
+  },
+  {
+    prompt: "According to the lecture, when does the sense-plan-act loop 'succeed'?",
+    options: [
+      "When it uses the fewest possible sensors",
+      "When it runs fast enough and with tightly synchronized timing for the system to react before the environment changes again",
+      "When the planning step uses the most advanced algorithm available",
+      "When it avoids using any middleware"
+    ],
+    correct: 1,
+    hint: "Think about racing against a changing environment.",
+    explanation: "Speed and synchronization are the real measures of success — a slow or poorly-timed loop means the robot reacts to an environment that has already changed."
+  },
+  {
+    prompt: "A student trains an obstacle-avoidance algorithm entirely in simulation and it performs perfectly. On real hardware it fails constantly. Which challenge does this illustrate?",
+    options: [
+      "Protocol mismatch",
+      "Resource constraints",
+      "Sim-to-real gap",
+      "Timing & synchronization",
+      "Middleware failure"
+    ],
+    correct: 2,
+    hint: "The issue only appeared when real hardware got involved.",
+    explanation: "This is the classic sim-to-real gap: behavior validated in a clean, idealized simulation often breaks down once it encounters real sensor noise, latency, and physical imperfections."
+  }
+];
+
+let current = 0;
+let answered = false;
+let selectedIdx = null;
+const results = []; // {correct: bool}
+
+const card = document.getElementById('card');
+const bus = document.getElementById('bus');
+
+function renderBus() {
+  bus.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const node = document.createElement('div');
+    node.className = 'node';
+    if (i < current) node.classList.add('done');
+    if (i === current) node.classList.add('current');
+    bus.appendChild(node);
+    if (i < QUESTIONS.length - 1) {
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      if (i < current) seg.classList.add('done');
+      bus.appendChild(seg);
+    }
+  });
+}
+
+function letter(i) { return String.fromCharCode(65 + i); }
+
+function renderQuestion() {
+  answered = false;
+  selectedIdx = null;
+  const q = QUESTIONS[current];
+  renderBus();
+
+  card.innerHTML = `
+    <div class="qcount">QUESTION ${current + 1} / ${QUESTIONS.length}</div>
+    <p class="prompt">${q.prompt}</p>
+    <div class="options" id="options"></div>
+    <div class="hint-row">
+      <button class="hint-btn" id="hintBtn">Show a hint</button>
+      <div class="hint-text" id="hintText">${q.hint}</div>
+    </div>
+    <div class="feedback" id="feedback">
+      <div class="verdict" id="verdict"></div>
+      <div class="explanation" id="explanation">${q.explanation}</div>
+    </div>
+    <div class="nav-row">
+      <button class="next-btn" id="nextBtn">${current === QUESTIONS.length - 1 ? 'See results' : 'Next question'} →</button>
+    </div>
+  `;
+
+  const optionsEl = document.getElementById('options');
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="tag">${letter(i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectOption(i));
+    optionsEl.appendChild(btn);
+  });
+
+  document.getElementById('hintBtn').addEventListener('click', () => {
+    document.getElementById('hintText').classList.toggle('show');
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    current++;
+    if (current >= QUESTIONS.length) {
+      renderResults();
+    } else {
+      renderQuestion();
+    }
+  });
+}
+
+function selectOption(i) {
+  if (answered) return;
+  answered = true;
+  selectedIdx = i;
+  const q = QUESTIONS[current];
+  const isCorrect = i === q.correct;
+  results[current] = { correct: isCorrect };
+
+  const optionEls = document.querySelectorAll('.option');
+  optionEls.forEach((el, idx) => {
+    el.disabled = true;
+    if (idx === q.correct) el.classList.add('correct');
+    if (idx === i && !isCorrect) el.classList.add('incorrect');
+  });
+
+  const feedback = document.getElementById('feedback');
+  feedback.classList.add('show');
+  const verdict = document.getElementById('verdict');
+  verdict.textContent = isCorrect ? "Correct." : "Not quite.";
+  verdict.className = 'verdict ' + (isCorrect ? 'right' : 'wrong');
+
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function renderResults() {
+  renderBus();
+  const score = results.filter(r => r.correct).length;
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+
+  let reviewHtml = '';
+  QUESTIONS.forEach((q, i) => {
+    const r = results[i];
+    reviewHtml += `
+      <div class="review-item">
+        <div class="review-dot ${r.correct ? 'right' : 'wrong'}"></div>
+        <div class="review-q"><span class="num">Q${i+1}</span>${q.prompt}</div>
+      </div>
+    `;
+  });
+
+  card.innerHTML = `
+    <div class="results">
+      <div class="qcount">RESULTS</div>
+      <div class="score-big">${score}/${QUESTIONS.length}</div>
+      <div class="score-label">${pct}% correct</div>
+      ${reviewHtml}
+      <div class="restart-row">
+        <button class="restart-btn" id="restartBtn">Retake quiz</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    current = 0;
+    results.length = 0;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+
+</body>
+</html>
