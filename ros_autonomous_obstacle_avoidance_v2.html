@@ -1,0 +1,167 @@
+<h2 class="sr-only">Simulation of a ROS robot autonomously avoiding obstacles using simulated LIDAR, similar to a reactive obstacle-avoidance node publishing to cmd_vel</h2>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+  <p style="font-size:14px; color:var(--text-secondary); margin:0;">The robot drives forward and steers itself away from obstacles using simulated laser rays.</p>
+  <button id="resetBtn" style="font-size:13px;">Reset</button>
+</div>
+<div style="position:relative; border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+  <canvas id="canvas" width="640" height="380" style="display:block; width:100%; height:auto;"></canvas>
+</div>
+<div style="display:flex; gap:16px; margin-top:0.75rem; font-size:13px; color:var(--text-secondary); flex-wrap:wrap;">
+  <span><i class="ti ti-robot" style="color:#378ADD; font-size:14px;" aria-hidden="true"></i> Robot</span>
+  <span><i class="ti ti-square-filled" style="color:#888780; font-size:12px;" aria-hidden="true"></i> Obstacle</span>
+  <span><i class="ti ti-line" style="color:#D85A30; font-size:14px;" aria-hidden="true"></i> LIDAR rays</span>
+  <span id="statusOut" style="margin-left:auto; font-weight:500; color:var(--text-primary);">/cmd_vel: forward</span>
+</div>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W = 640, H = 380;
+const obstacles = [
+  {x:200,y:60,w:60,h:120},
+  {x:400,y:220,w:100,h:50},
+  {x:100,y:250,w:70,h:60},
+  {x:470,y:60,w:60,h:80},
+  {x:300,y:150,w:50,h:50}
+];
+let statusOut = document.getElementById('statusOut');
+const INIT = {x:60, y:190, a:0};
+let robot = {...INIT};
+const SPEED = 1.6;
+const RAY_LEN = 55;
+const RAY_ANGLES = [-0.9,-0.6,-0.3,0,0.3,0.6,0.9];
+
+function rectHit(x,y){
+  for(const o of obstacles){
+    if(x>o.x && x<o.x+o.w && y>o.y && y<o.y+o.h) return true;
+  }
+  return x<8 || x>W-8 || y<8 || y>H-8;
+}
+
+function castRay(ang){
+  const a = robot.a + ang;
+  for(let d=0; d<RAY_LEN; d+=2){
+    const x = robot.x + Math.cos(a)*d;
+    const y = robot.y + Math.sin(a)*d;
+    if(rectHit(x,y)) return {dist:d, x, y, ang};
+  }
+  return {dist:RAY_LEN, x:robot.x+Math.cos(a)*RAY_LEN, y:robot.y+Math.sin(a)*RAY_LEN, ang};
+}
+
+let rays = [];
+
+function step(){
+  rays = RAY_ANGLES.map(castRay);
+  const front = rays.filter(r => Math.abs(r.ang) < 0.35);
+  const minFront = Math.min(...front.map(r=>r.dist));
+
+  if(minFront < 40){
+    const left = rays.filter(r=>r.ang<0).reduce((s,r)=>s+r.dist,0);
+    const right = rays.filter(r=>r.ang>0).reduce((s,r)=>s+r.dist,0);
+    const turn = left > right ? -0.09 : 0.09;
+    robot.a += turn;
+    statusOut.textContent = '/cmd_vel: turning (obstacle ahead)';
+  } else {
+    const nx = robot.x + Math.cos(robot.a)*SPEED;
+    const ny = robot.y + Math.sin(robot.a)*SPEED;
+    if(!rectHit(nx,ny)){
+      robot.x = nx; robot.y = ny;
+    } else {
+      robot.a += 0.09;
+    }
+    statusOut.textContent = '/cmd_vel: forward';
+  }
+}
+
+function drawRobot(){
+  ctx.save();
+  ctx.translate(robot.x, robot.y);
+  ctx.rotate(robot.a);
+
+  // wheels (rear)
+  ctx.fillStyle = '#2C2C2A';
+  ctx.fillRect(-9, -12, 6, 5);
+  ctx.fillRect(-9, 7, 6, 5);
+
+  // main chassis body
+  ctx.fillStyle = '#378ADD';
+  ctx.beginPath();
+  ctx.moveTo(-11, -9);
+  ctx.lineTo(9, -9);
+  ctx.quadraticCurveTo(15, -9, 15, -3);
+  ctx.lineTo(15, 3);
+  ctx.quadraticCurveTo(15, 9, 9, 9);
+  ctx.lineTo(-11, 9);
+  ctx.closePath();
+  ctx.fill();
+
+  // chassis outline
+  ctx.strokeStyle = '#042C53';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // sensor dome at the front
+  ctx.beginPath();
+  ctx.arc(11, 0, 4, 0, Math.PI*2);
+  ctx.fillStyle = '#F09595';
+  ctx.fill();
+  ctx.strokeStyle = '#791F1F';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // top antenna
+  ctx.strokeStyle = '#042C53';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(0, -9);
+  ctx.lineTo(0, -15);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, -16, 1.6, 0, Math.PI*2);
+  ctx.fillStyle = '#D85A30';
+  ctx.fill();
+
+  // heading indicator line
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-3, 0);
+  ctx.lineTo(8, 0);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#F1EFE8';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#888780';
+  for(const o of obstacles) ctx.fillRect(o.x,o.y,o.w,o.h);
+
+  ctx.strokeStyle = '#D85A30';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6;
+  for(const r of rays){
+    ctx.beginPath();
+    ctx.moveTo(robot.x, robot.y);
+    ctx.lineTo(r.x, r.y);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  drawRobot();
+}
+
+function loop(){
+  step();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  robot = {...INIT};
+});
+
+draw();
+loop();
+</script>
