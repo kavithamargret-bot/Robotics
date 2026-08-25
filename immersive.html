@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inside-Out Tracking & Depth Sensing - MCQ Quiz</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;padding:20px;color:#222}
+.container{max-width:900px;margin:auto;background:white;padding:28px;border-radius:14px;box-shadow:0 4px 18px #bbb}
+h1{text-align:center;color:#173f5f}
+.subtitle{text-align:center;color:#666}
+.question{border:1px solid #ddd;border-radius:10px;padding:18px;margin:18px 0}
+.question h3{margin-top:0}
+label{display:block;padding:10px;margin:7px 0;border-radius:7px;background:#f7f7f7;cursor:pointer}
+label:hover{background:#eef5ff}
+button{border:0;border-radius:8px;padding:11px 18px;margin:6px;cursor:pointer;font-size:15px}
+.check{background:#1769aa;color:white}
+.next{background:#2e7d32;color:white}
+.reset{background:#777;color:white}
+.feedback{font-weight:bold;margin-top:10px}
+.correct{color:#16803c}
+.wrong{color:#c62828}
+#score{font-size:20px;font-weight:bold;text-align:center;margin:20px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Inside-Out Tracking & Depth Sensing</h1>
+<p class="subtitle">Interactive MCQ Quiz – Select an option and click <b>Check Answer</b></p>
+<div id="quiz"></div>
+<div id="score"></div>
+<div style="text-align:center">
+<button class="reset" onclick="resetQuiz()">Restart Quiz</button>
+</div>
+</div>
+
+<script>
+const questions = [
+["What is the primary purpose of tracking in VR?",["To increase screen brightness","To determine the user's position and movement","To reduce battery size","To generate sound"],1],
+["How many degrees of freedom are provided by full 6DOF tracking?",["3","4","6","9"],2],
+["Which represents the three translational movements?",["Pitch, Yaw, Roll","X, Y, Z","RGB","IR, RGB, ToF"],1],
+["Which rotation represents turning the head left and right?",["Pitch","Roll","Yaw","Translation"],2],
+["Which rotation represents nodding the head up and down?",["Pitch","Yaw","Roll","X-axis"],0],
+["What is inside-out tracking?",["External cameras track the headset","Headset-mounted cameras and sensors track the environment","Only GPS tracks the headset","Controllers track the headset"],1],
+["Which is an advantage of inside-out tracking?",["Requires external base stations","Requires room instrumentation","Portable and easy to set up","Works only in a fixed laboratory"],2],
+["Which is an example of inside-out tracking?",["Early Oculus Rift","HTC Vive Lighthouse","Meta Quest","External IR camera array"],2],
+["In outside-in tracking, where are tracking sensors generally located?",["Inside the controller only","On the user's shoes","Around the room","Inside the display"],2],
+["Which system is associated with outside-in tracking?",["Meta Quest","HTC Vive Lighthouse","HoloLens","Apple Vision Pro"],1],
+["What does IMU stand for?",["Image Measurement Unit","Inertial Measurement Unit","Internal Mapping Unit","Infrared Motion Utility"],1],
+["What does SLAM stand for?",["Sensor Location and Motion","Simultaneous Localization and Mapping","Spatial Light and Measurement","System Localization and Monitoring"],1],
+["What are the two main functions of SLAM?",["Rendering and audio processing","Localization and mapping","Lighting and shading","Compression and transmission"],1],
+["Which visual features can be detected during inside-out tracking?",["Corners, edges and textures","Only colors","Only sounds","GPS signals"],0],
+["What does sensor fusion combine in visual-inertial tracking?",["Audio and video","Camera and IMU data","GPS and Wi-Fi","Display and speakers"],1],
+["What does depth sensing measure?",["Sound intensity","Screen resolution","Distance to surrounding surfaces","Battery temperature"],2],
+["What is a depth map?",["A map showing only colors","A representation of distance for image pixels","A map of Wi-Fi signals","A map of controller buttons"],1],
+["Which is NOT a major application of depth sensing?",["Spatial mapping","Hand tracking","Occlusion","Increasing speaker volume"],3],
+["Which depth-sensing technique uses two cameras?",["ToF","Structured Light","Stereo Vision","IMU"],2],
+["Stereo vision calculates depth using:",["Image disparity and triangulation","Sound reflection","GPS coordinates","Battery voltage"],0],
+["Which depth-sensing method projects a known infrared pattern?",["Stereo Vision","Structured Light","ToF","IMU"],1],
+["Structured light is particularly accurate at:",["Very long distances","Short range","Underground distances","Satellite distances"],1],
+["What does ToF stand for?",["Time-of-Frame","Tracking of Features","Time-of-Flight","Transfer of Frequency"],2],
+["How does Time-of-Flight sensing determine depth?",["By measuring reflected light travel time","By measuring sound frequency","By detecting GPS signals","By counting pixels"],0],
+["Which method is fast and robust at longer range?",["Stereo Vision","Structured Light","Time-of-Flight","IMU"],2],
+["What is occlusion in AR/MR?",["Increasing virtual object brightness","Making real objects correctly hide virtual objects","Removing all real objects","Turning off the headset camera"],1],
+["What enables hand and finger tracking without controllers?",["Depth information","GPS","External speakers","Screen resolution"],0],
+["What is the purpose of spatial mapping?",["To create a 3D representation of the physical environment","To increase network bandwidth","To improve audio quality","To reduce display size"],0],
+["Which device is described as using a ToF depth camera and IMU?",["Meta Quest 3","Microsoft HoloLens 2","Early Oculus Rift","HTC Vive Lighthouse"],1],
+["Which device is described as using stereo cameras, LiDAR and an IMU?",["Apple Vision Pro","Meta Quest 3","HTC Vive","Early Oculus Rift"],0],
+["What is an output of the sensor fusion engine?",["Only audio","6DOF pose and spatial mesh/boundary","Only RGB images","Only depth values"],1],
+["Which is a challenge of inside-out tracking?",["It always requires external base stations","It is sensitive to poor lighting and low-texture surfaces","It cannot support room-scale tracking","It cannot use cameras"],1],
+["What problem can accumulate during long tracking sessions?",["Screen brightness","Drift","Audio distortion","Color saturation"],1],
+["Which can increase power consumption?",["Depth sensors and on-device processing","Removing sensors","Reducing computation","Turning off cameras"],0],
+["Which is an application of inside-out tracking and depth sensing?",["Gaming and entertainment","Training and simulation","Architecture and design","All of the above"],3],
+["SLAM techniques are also used in:",["Autonomous robots and drones","Printers only","Speakers only","Keyboards only"],0],
+["Which system helps warn VR users before approaching physical obstacles?",["Guardian/boundary system","Audio amplifier","Display controller","Keyboard"],0],
+["Which statement is TRUE about inside-out tracking?",["It always requires external cameras","It is self-contained and portable","It cannot detect environmental features","It works without sensors"],1],
+["Which sequence correctly represents inside-out tracking?",["Render → Camera → SLAM → Capture","Capture → Feature Extraction → SLAM Fusion → Pose Output","IMU → Display → Speaker → Camera","Depth → Audio → GPS → Rendering"],1],
+["Which best summarizes tracking and depth sensing?",["Tracking determines 'Where am I?', while depth sensing determines 'What is around me?'","Both perform exactly the same function","Tracking measures only sound, while depth measures color","Depth sensing replaces all tracking"],0]
+];
+
+let current=0, score=0, answered=false;
+
+function render(){
+ const q=questions[current];
+ document.getElementById("quiz").innerHTML=`
+ <div class="question">
+ <h3>Question ${current+1} of ${questions.length}</h3>
+ <p><b>${q[0]}</b></p>
+ ${q[1].map((o,i)=>`<label><input type="radio" name="answer" value="${i}"> ${String.fromCharCode(65+i)}. ${o}</label>`).join("")}
+ <button class="check" onclick="checkAnswer()">Check Answer</button>
+ <button class="next" onclick="nextQuestion()" style="display:none" id="nextBtn">Next Question</button>
+ <div id="feedback" class="feedback"></div>
+ </div>`;
+}
+function checkAnswer(){
+ if(answered)return;
+ const selected=document.querySelector('input[name="answer"]:checked');
+ const feedback=document.getElementById("feedback");
+ if(!selected){feedback.textContent="Please select an option.";feedback.className="feedback wrong";return;}
+ answered=true;
+ const chosen=Number(selected.value), correct=questions[current][2];
+ if(chosen===correct){score++;feedback.textContent="✓ Correct!";feedback.className="feedback correct";}
+ else{feedback.textContent="✗ Incorrect. Correct answer: "+String.fromCharCode(65+correct)+". "+questions[current][1][correct];feedback.className="feedback wrong";}
+ document.getElementById("nextBtn").style.display="inline-block";
+}
+function nextQuestion(){
+ if(!answered)return;
+ if(current<questions.length-1){current++;answered=false;render();}
+ else{
+  document.getElementById("quiz").innerHTML="";
+  document.getElementById("score").innerHTML=`Quiz Completed!<br>Your Score: ${score} / ${questions.length} (${Math.round(score/questions.length*100)}%)`;
+ }
+}
+function resetQuiz(){current=0;score=0;answered=false;document.getElementById("score").innerHTML="";render();}
+render();
+</script>
+</body>
+</html>
