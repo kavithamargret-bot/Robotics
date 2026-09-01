@@ -1,0 +1,291 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bias–Variance Interactive Demo</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        color: #222;
+    }
+
+    .container {
+        max-width: 950px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+    canvas {
+        border: 2px solid #333;
+        background: white;
+        width: 100%;
+        max-width: 850px;
+        height: 430px;
+        margin-top: 20px;
+    }
+
+    .slider {
+        width: 70%;
+    }
+
+    .complexity {
+        font-size: 22px;
+        font-weight: bold;
+        margin: 15px;
+    }
+
+    .status {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .under {
+        background: #ffd6d6;
+    }
+
+    .good {
+        background: #d8f5d0;
+    }
+
+    .over {
+        background: #d9e7ff;
+    }
+
+    .cards {
+        display: flex;
+        justify-content: space-around;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .card {
+        width: 250px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #fafafa;
+        border: 2px solid #ddd;
+    }
+
+    .card h2 {
+        margin-top: 0;
+    }
+
+    button {
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #333;
+        color: white;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎯 Bias–Variance Tradeoff</h1>
+
+<p>
+Move the slider to increase <b>Model Complexity</b>.
+</p>
+
+<input type="range" min="1" max="10" value="1"
+       class="slider" id="complexity">
+
+<div class="complexity">
+    Model Complexity: <span id="value">1</span>
+</div>
+
+<div id="status" class="status under">
+    🔴 UNDERFITTING — High Bias
+</div>
+
+<canvas id="graph" width="850" height="430"></canvas>
+
+<div class="cards">
+
+<div class="card">
+<h2>🔴 Bias</h2>
+<p>
+Model is too simple.
+</p>
+<p>
+It cannot learn the important pattern.
+</p>
+<b>High Bias → Underfitting</b>
+</div>
+
+<div class="card">
+<h2>🟢 Balanced</h2>
+<p>
+Model learns the important pattern.
+</p>
+<p>
+It generalizes well to new data.
+</p>
+<b>Good Model</b>
+</div>
+
+<div class="card">
+<h2>🔵 Variance</h2>
+<p>
+Model is too complex.
+</p>
+<p>
+It memorizes training data and noise.
+</p>
+<b>High Variance → Overfitting</b>
+</div>
+
+</div>
+
+<br>
+
+<button onclick="resetDemo()">Reset</button>
+
+</div>
+
+<script>
+
+const slider = document.getElementById("complexity");
+const value = document.getElementById("value");
+const status = document.getElementById("status");
+
+const canvas = document.getElementById("graph");
+const ctx = canvas.getContext("2d");
+
+// Training data
+const points = [
+    [50,330],
+    [110,290],
+    [170,250],
+    [230,260],
+    [290,200],
+    [350,220],
+    [410,160],
+    [470,180],
+    [530,120],
+    [590,140],
+    [650,80],
+    [710,110],
+    [770,60]
+];
+
+function draw() {
+
+    let c = parseInt(slider.value);
+
+    value.textContent = c;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Axes
+    ctx.beginPath();
+    ctx.moveTo(40,380);
+    ctx.lineTo(810,380);
+    ctx.moveTo(40,380);
+    ctx.lineTo(40,30);
+    ctx.stroke();
+
+    ctx.font = "16px Arial";
+    ctx.fillText("Input", 780, 410);
+    ctx.fillText("Output", 5, 30);
+
+    // Training points
+    points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p[0],p[1],6,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    // Model curve
+    ctx.beginPath();
+
+    for(let x=50; x<=770; x+=5) {
+
+        let y;
+
+        if(c <= 3) {
+
+            // Very simple model
+            y = 330 - 0.34*x;
+
+        } else if(c <= 6) {
+
+            // Good general pattern
+            y = 335 - 0.36*x
+                + 18*Math.sin(x/90);
+
+        } else {
+
+            // Overfitting / memorization
+            y = 220
+                - 0.25*x
+                + 55*Math.sin(x/35)
+                + 25*Math.sin(x/13);
+
+        }
+
+        if(x === 50)
+            ctx.moveTo(x,y);
+        else
+            ctx.lineTo(x,y);
+    }
+
+    ctx.stroke();
+
+    // Status
+    if(c <= 3) {
+
+        status.className = "status under";
+        status.innerHTML =
+        "🔴 UNDERFITTING — High Bias";
+
+    } else if(c <= 6) {
+
+        status.className = "status good";
+        status.innerHTML =
+        "🟢 GOOD FIT — Balanced Bias & Variance";
+
+    } else {
+
+        status.className = "status over";
+        status.innerHTML =
+        "🔵 OVERFITTING — High Variance";
+    }
+}
+
+slider.addEventListener("input", draw);
+
+function resetDemo() {
+    slider.value = 1;
+    draw();
+}
+
+draw();
+
+</script>
+
+</body>
+</html>
+```
