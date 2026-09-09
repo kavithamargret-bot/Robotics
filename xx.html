@@ -1,0 +1,850 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Robot Arm Control Dashboard</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        margin: 0;
+        background: #eef2f7;
+        color: #222;
+    }
+
+    header {
+        background: #1f2937;
+        color: white;
+        padding: 18px;
+        text-align: center;
+    }
+
+    header h1 {
+        margin: 0;
+        font-size: 26px;
+    }
+
+    .container {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        max-width: 1200px;
+        margin: auto;
+    }
+
+    .control-panel {
+        width: 320px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    }
+
+    .control-panel h2 {
+        margin-top: 0;
+    }
+
+    .slider-box {
+        margin: 20px 0;
+    }
+
+    .slider-box label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+        width: 100%;
+    }
+
+    .value {
+        font-weight: bold;
+        color: #2563eb;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    #pickButton {
+        background: #16a34a;
+        color: white;
+    }
+
+    #resetButton {
+        background: #dc2626;
+        color: white;
+    }
+
+    .workspace {
+        flex: 1;
+        background: white;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    }
+
+    canvas {
+        width: 100%;
+        max-width: 750px;
+        height: 550px;
+        border: 2px solid #374151;
+        background: #f9fafb;
+        display: block;
+        margin: auto;
+    }
+
+    .data-panel {
+        margin-top: 15px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .data-box {
+        background: #f3f4f6;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .data-box strong {
+        display: block;
+        font-size: 18px;
+        margin-top: 5px;
+        color: #2563eb;
+    }
+
+    .status {
+        margin-top: 15px;
+        padding: 12px;
+        background: #e0f2fe;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    @media(max-width: 800px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .control-panel {
+            width: 100%;
+        }
+
+        .data-panel {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🤖 Robot Arm Control Dashboard</h1>
+    <p>Two-Link Robotic Arm – End-Effector Object Picking</p>
+</header>
+
+<div class="container">
+
+    <!-- CONTROL PANEL -->
+    <div class="control-panel">
+
+        <h2>Robot Controls</h2>
+
+        <div class="slider-box">
+            <label>
+                Joint 1 Angle:
+                <span id="theta1Value" class="value">45°</span>
+            </label>
+
+            <input
+                type="range"
+                id="theta1"
+                min="-90"
+                max="90"
+                value="45"
+                step="1">
+        </div>
+
+        <div class="slider-box">
+            <label>
+                Joint 2 Angle:
+                <span id="theta2Value" class="value">45°</span>
+            </label>
+
+            <input
+                type="range"
+                id="theta2"
+                min="-150"
+                max="150"
+                value="45"
+                step="1">
+        </div>
+
+        <button id="pickButton">
+            🤏 Pick Object
+        </button>
+
+        <button id="resetButton">
+            🔄 Reset Robot
+        </button>
+
+        <div class="status" id="status">
+            Robot Ready
+        </div>
+
+    </div>
+
+
+    <!-- WORKSPACE -->
+    <div class="workspace">
+
+        <h2>Robot Workspace</h2>
+
+        <canvas id="robotCanvas"
+                width="750"
+                height="550">
+        </canvas>
+
+        <div class="data-panel">
+
+            <div class="data-box">
+                Joint 1
+                <strong id="theta1Display">45°</strong>
+            </div>
+
+            <div class="data-box">
+                Joint 2
+                <strong id="theta2Display">45°</strong>
+            </div>
+
+            <div class="data-box">
+                End Effector X
+                <strong id="xDisplay">0</strong>
+            </div>
+
+            <div class="data-box">
+                End Effector Y
+                <strong id="yDisplay">0</strong>
+            </div>
+
+            <div class="data-box">
+                Target X
+                <strong id="targetXDisplay">300</strong>
+            </div>
+
+            <div class="data-box">
+                Target Y
+                <strong id="targetYDisplay">200</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("robotCanvas");
+const ctx = canvas.getContext("2d");
+
+// ------------------------------------
+// ROBOT PARAMETERS
+// ------------------------------------
+
+const L1 = 150;
+const L2 = 120;
+
+// Robot base position
+const baseX = 375;
+const baseY = 450;
+
+// Target object position
+const targetX = 550;
+const targetY = 250;
+
+let theta1 = 45;
+let theta2 = 45;
+
+let objectPicked = false;
+let moving = false;
+
+
+// ------------------------------------
+// DOM ELEMENTS
+// ------------------------------------
+
+const theta1Slider = document.getElementById("theta1");
+const theta2Slider = document.getElementById("theta2");
+
+const theta1Value = document.getElementById("theta1Value");
+const theta2Value = document.getElementById("theta2Value");
+
+const theta1Display = document.getElementById("theta1Display");
+const theta2Display = document.getElementById("theta2Display");
+
+const xDisplay = document.getElementById("xDisplay");
+const yDisplay = document.getElementById("yDisplay");
+
+const status = document.getElementById("status");
+
+
+// ------------------------------------
+// FORWARD KINEMATICS
+// ------------------------------------
+
+function calculateEndEffector() {
+
+    let a1 = theta1 * Math.PI / 180;
+    let a2 = theta2 * Math.PI / 180;
+
+    let joint1X =
+        baseX + L1 * Math.cos(a1);
+
+    let joint1Y =
+        baseY - L1 * Math.sin(a1);
+
+    let endX =
+        joint1X + L2 * Math.cos(a1 + a2);
+
+    let endY =
+        joint1Y - L2 * Math.sin(a1 + a2);
+
+    return {
+        joint1X,
+        joint1Y,
+        endX,
+        endY
+    };
+}
+
+
+// ------------------------------------
+// DRAW GRID
+// ------------------------------------
+
+function drawGrid() {
+
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.lineWidth = 1;
+
+    for(let x = 0; x <= canvas.width; x += 50) {
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+
+    for(let y = 0; y <= canvas.height; y += 50) {
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+}
+
+
+// ------------------------------------
+// DRAW TARGET OBJECT
+// ------------------------------------
+
+function drawTarget() {
+
+    if(objectPicked) {
+        return;
+    }
+
+    ctx.fillStyle = "#f59e0b";
+
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#111827";
+    ctx.font = "14px Arial";
+
+    ctx.fillText(
+        "OBJECT",
+        targetX - 28,
+        targetY - 28
+    );
+}
+
+
+// ------------------------------------
+// DRAW ROBOT
+// ------------------------------------
+
+function drawRobot() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    drawGrid();
+    drawTarget();
+
+    const p = calculateEndEffector();
+
+    // --------------------------------
+    // Robot Base
+    // --------------------------------
+
+    ctx.fillStyle = "#374151";
+
+    ctx.beginPath();
+    ctx.arc(
+        baseX,
+        baseY,
+        25,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    // --------------------------------
+    // Link 1
+    // --------------------------------
+
+    ctx.strokeStyle = "#2563eb";
+    ctx.lineWidth = 20;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        baseX,
+        baseY
+    );
+
+    ctx.lineTo(
+        p.joint1X,
+        p.joint1Y
+    );
+
+    ctx.stroke();
+
+
+    // --------------------------------
+    // Joint 1
+    // --------------------------------
+
+    ctx.fillStyle = "#111827";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.joint1X,
+        p.joint1Y,
+        12,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    // --------------------------------
+    // Link 2
+    // --------------------------------
+
+    ctx.strokeStyle = "#16a34a";
+    ctx.lineWidth = 20;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        p.joint1X,
+        p.joint1Y
+    );
+
+    ctx.lineTo(
+        p.endX,
+        p.endY
+    );
+
+    ctx.stroke();
+
+
+    // --------------------------------
+    // End Effector
+    // --------------------------------
+
+    ctx.fillStyle = "#dc2626";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.endX,
+        p.endY,
+        14,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    // --------------------------------
+    // Gripper
+    // --------------------------------
+
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 6;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        p.endX - 12,
+        p.endY
+    );
+
+    ctx.lineTo(
+        p.endX - 22,
+        p.endY + 15
+    );
+
+    ctx.moveTo(
+        p.endX + 12,
+        p.endY
+    );
+
+    ctx.lineTo(
+        p.endX + 22,
+        p.endY + 15
+    );
+
+    ctx.stroke();
+
+
+    // --------------------------------
+    // Coordinates
+    // --------------------------------
+
+    ctx.fillStyle = "#111827";
+    ctx.font = "15px Arial";
+
+    ctx.fillText(
+        "End Effector",
+        p.endX + 15,
+        p.endY - 15
+    );
+
+
+    updateData(p);
+}
+
+
+// ------------------------------------
+// UPDATE DATA
+// ------------------------------------
+
+function updateData(p) {
+
+    theta1Value.innerText =
+        theta1 + "°";
+
+    theta2Value.innerText =
+        theta2 + "°";
+
+    theta1Display.innerText =
+        theta1 + "°";
+
+    theta2Display.innerText =
+        theta2 + "°";
+
+    xDisplay.innerText =
+        Math.round(p.endX - baseX);
+
+    yDisplay.innerText =
+        Math.round(baseY - p.endY);
+}
+
+
+// ------------------------------------
+// SLIDER CONTROL
+// ------------------------------------
+
+theta1Slider.addEventListener(
+    "input",
+    function() {
+
+        if(moving) return;
+
+        theta1 =
+            Number(this.value);
+
+        drawRobot();
+    }
+);
+
+
+theta2Slider.addEventListener(
+    "input",
+    function() {
+
+        if(moving) return;
+
+        theta2 =
+            Number(this.value);
+
+        drawRobot();
+    }
+);
+
+
+// ------------------------------------
+// PICK OBJECT
+// ------------------------------------
+
+document.getElementById(
+    "pickButton"
+).addEventListener(
+    "click",
+    function() {
+
+        if(moving) return;
+
+        moving = true;
+
+        status.innerText =
+            "Moving End-Effector to Object...";
+
+        moveToObject();
+    }
+);
+
+
+// ------------------------------------
+// INVERSE KINEMATICS
+// ------------------------------------
+
+function moveToObject() {
+
+    const dx =
+        targetX - baseX;
+
+    const dy =
+        baseY - targetY;
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+    const cosTheta2 =
+        (
+            distance * distance -
+            L1 * L1 -
+            L2 * L2
+        ) /
+        (2 * L1 * L2);
+
+    let newTheta2 =
+        Math.acos(cosTheta2);
+
+    let newTheta1 =
+        Math.atan2(dy, dx)
+        -
+        Math.atan2(
+            L2 * Math.sin(newTheta2),
+            L1 + L2 * Math.cos(newTheta2)
+        );
+
+    newTheta1 =
+        newTheta1 * 180 / Math.PI;
+
+    newTheta2 =
+        newTheta2 * 180 / Math.PI;
+
+    animateArm(
+        newTheta1,
+        newTheta2
+    );
+}
+
+
+// ------------------------------------
+// ARM ANIMATION
+// ------------------------------------
+
+function animateArm(
+    targetTheta1,
+    targetTheta2
+) {
+
+    const step = 1;
+
+    let finished = true;
+
+
+    if(
+        Math.abs(theta1 - targetTheta1)
+        > step
+    ) {
+
+        theta1 +=
+            theta1 < targetTheta1
+            ? step
+            : -step;
+
+        finished = false;
+    }
+    else {
+
+        theta1 =
+            targetTheta1;
+    }
+
+
+    if(
+        Math.abs(theta2 - targetTheta2)
+        > step
+    ) {
+
+        theta2 +=
+            theta2 < targetTheta2
+            ? step
+            : -step;
+
+        finished = false;
+    }
+    else {
+
+        theta2 =
+            targetTheta2;
+    }
+
+
+    theta1Slider.value =
+        theta1;
+
+    theta2Slider.value =
+        theta2;
+
+
+    drawRobot();
+
+
+    if(!finished) {
+
+        requestAnimationFrame(
+            function() {
+
+                animateArm(
+                    targetTheta1,
+                    targetTheta2
+                );
+
+            }
+        );
+
+    }
+    else {
+
+        objectPicked = true;
+
+        status.innerText =
+            "✓ Object Picked Successfully!";
+
+        moving = false;
+
+        drawRobot();
+
+        drawPickedObject();
+    }
+}
+
+
+// ------------------------------------
+// DRAW PICKED OBJECT
+// ------------------------------------
+
+function drawPickedObject() {
+
+    const p =
+        calculateEndEffector();
+
+    ctx.fillStyle =
+        "#f59e0b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.endX,
+        p.endY + 25,
+        12,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+}
+
+
+// ------------------------------------
+// RESET
+// ------------------------------------
+
+document.getElementById(
+    "resetButton"
+).addEventListener(
+    "click",
+    function() {
+
+        theta1 = 45;
+        theta2 = 45;
+
+        objectPicked = false;
+        moving = false;
+
+        theta1Slider.value = 45;
+        theta2Slider.value = 45;
+
+        status.innerText =
+            "Robot Ready";
+
+        drawRobot();
+    }
+);
+
+
+// ------------------------------------
+// INITIAL DRAW
+// ------------------------------------
+
+drawRobot();
+
+</script>
+
+</body>
+</html>
+```
