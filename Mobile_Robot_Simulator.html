@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile Robot Simulator — Hands-on Lab</title>
+<style>
+:root{--navy:#16324f;--teal:#087f8c;--bg:#f4f7fa;--ink:#203040;--muted:#637487;--line:#d7e0e8;--card:#fff;--orange:#e7a23b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:22px 18px}header .wrap,main{max-width:1050px;margin:auto}h1{font-size:clamp(1.45rem,4vw,2.15rem);margin:0 0 5px}header p{margin:0;color:#d9e8f2}
+main{padding:18px;display:grid;gap:16px}.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}.controls{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:13px}
+button{font:inherit;font-weight:650;border:1px solid #b9c8d5;border-radius:10px;background:#fff;color:var(--navy);padding:11px 15px;min-height:44px;cursor:pointer}
+button.primary{background:var(--teal);color:white;border-color:var(--teal)}button:hover{filter:brightness(.97)}button:focus-visible,input:focus-visible{outline:3px solid #f1bc60;outline-offset:2px}
+.canvas-wrap{width:100%;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfdff}svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.stat{background:#edf5f6;border-radius:10px;padding:10px;min-width:0}.stat span{display:block;color:var(--muted);font-size:.78rem}.stat strong{font-size:1.1rem;overflow-wrap:anywhere}
+h2{font-size:1.15rem;margin:0 0 10px;color:var(--navy)}.hint{color:var(--muted);font-size:.92rem;margin:8px 0 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}.range-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin:10px 0}.range-row label{font-weight:550}.range-row input{grid-column:1/-1;width:100%;accent-color:var(--teal)}.pill{display:inline-block;background:#e8f5f5;color:#075d65;padding:3px 8px;border-radius:20px;font-size:.82rem}
+#status{margin:0;padding:10px 12px;background:#f1f6fa;border-radius:9px;min-height:44px}ol{margin:8px 0 0;padding-left:22px}li{margin:6px 0}.foot{color:var(--muted);font-size:.82rem;text-align:center;padding:4px 0 15px}
+@media(max-width:650px){main{padding:11px}.grid2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:12px}.controls button{flex:1 1 42%}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Mobile Robot Simulator</h1><p>Hands-on practical • Differential-drive motion • Offline browser application</p></div></header>
+<main>
+<section class="panel">
+  <div class="controls" aria-label="Robot movement controls">
+    <button class="primary" id="forward">↑ Forward</button><button id="left">↶ Turn left</button>
+    <button id="right">↷ Turn right</button><button id="back">↓ Reverse</button>
+    <button id="auto">▶ Auto demo</button><button id="pause" disabled>Ⅱ Pause</button><button id="reset">↻ Reset</button>
+  </div>
+  <div class="canvas-wrap">
+  <svg id="world" viewBox="0 0 700 440" role="img" aria-label="Top-down simulated floor with a mobile robot, obstacles, and the robot's travelled path">
+    <defs><pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M25 0H0V25" fill="none" stroke="#e1e8ee" stroke-width="1"/></pattern></defs>
+    <rect width="700" height="440" fill="url(#grid)"/><rect x="10" y="10" width="680" height="420" rx="12" fill="none" stroke="#9aaebd" stroke-width="3"/>
+    <g id="obstacles" fill="#e9a23b" stroke="#a96910" stroke-width="2"><rect x="390" y="85" width="72" height="65" rx="8"/><rect x="510" y="265" width="82" height="60" rx="8"/><rect x="190" y="285" width="62" height="70" rx="8"/></g>
+    <g fill="#75480c" font-size="12" font-weight="700"><text x="426" y="122" text-anchor="middle">OBSTACLE</text><text x="551" y="299" text-anchor="middle">OBSTACLE</text><text x="221" y="324" text-anchor="middle">OBSTACLE</text></g>
+    <path id="trail" d="" fill="none" stroke="#087f8c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g id="robot" transform="translate(100 210) rotate(0)">
+      <circle cx="0" cy="0" r="26" fill="#d8eeee" stroke="#087f8c" stroke-width="2" stroke-dasharray="4 4"/>
+      <rect x="-22" y="-26" width="44" height="52" rx="9" fill="#087f8c" stroke="#164a58" stroke-width="2"/>
+      <rect x="-27" y="-17" width="8" height="15" rx="2" fill="#334155"/><rect x="19" y="-17" width="8" height="15" rx="2" fill="#334155"/>
+      <path d="M0 -19 L-9 -3 L9 -3 Z" fill="#fff"/><circle cx="0" cy="7" r="4" fill="#fff"/>
+      <path d="M0 -26 L0 -38" stroke="#e7a23b" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <g id="goal"><circle cx="635" cy="75" r="17" fill="#e7f5e9" stroke="#238636" stroke-width="3"/><path d="M626 75l6 6 12-14" fill="none" stroke="#238636" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="635" y="51" text-anchor="middle" fill="#17632b" font-size="13" font-weight="700">GOAL</text></g>
+    <text x="22" y="420" fill="#637487" font-size="12">Schematic 2D simulation • Not a physics engine</text>
+  </svg></div>
+  <div class="stats">
+    <div class="stat"><span>X position</span><strong id="xval">100 px</strong></div><div class="stat"><span>Y position</span><strong id="yval">210 px</strong></div>
+    <div class="stat"><span>Heading</span><strong id="heading">0°</strong></div><div class="stat"><span>Distance travelled</span><strong id="distance">0 px</strong></div>
+  </div>
+  <p id="status" aria-live="polite" style="margin-top:12px">Ready. Move the robot, avoid the orange obstacles, and try to reach the green goal.</p>
+</section>
+<section class="panel">
+<h2>Experiment settings</h2>
+<div class="grid2">
+<div>
+ <div class="range-row"><label for="step">Movement step</label><strong id="stepLabel">20 px</strong><input id="step" type="range" min="5" max="35" value="20"></div>
+ <div class="range-row"><label for="turn">Turn angle</label><strong id="turnLabel">30°</strong><input id="turn" type="range" min="10" max="90" step="5" value="30"></div>
+</div>
+<div>
+ <p><span class="pill">Student task</span></p>
+ <ol><li>Move forward and observe the coordinates.</li><li>Turn left or right and note the heading.</li><li>Navigate around all obstacles.</li><li>Try the auto demo, then pause or reset.</li><li>Record whether the robot reaches the goal without touching an obstacle.</li></ol>
+</div>
+</div>
+</section>
+<section class="panel">
+<h2>Learning check</h2>
+<div class="grid2"><div><strong>1. What does the heading represent?</strong><p class="hint">The direction the robot's front is facing, measured in degrees.</p></div><div><strong>2. What does the trail show?</strong><p class="hint">The path followed by the robot as it moves.</p></div><div><strong>3. How can obstacle avoidance be added?</strong><p class="hint">Use sensor distance and a rule to stop or turn when an obstacle is near.</p></div><div><strong>4. Is this a full physics simulator?</strong><p class="hint">No. It is a lightweight 2D kinematic teaching app.</p></div></div>
+</section>
+<div class="foot">Runs locally in a modern browser. No installation, account, internet connection, or data upload required.</div>
+</main>
+<script>
+(()=> {
+const $=id=>document.getElementById(id);
+const svg=$('world'), bot=$('robot'), trail=$('trail');
+let x=100,y=210,a=0,distance=0,points=[[100,210]],timer=null;
+const obstacles=[{x:390,y:85,w:72,h:65},{x:510,y:265,w:82,h:60},{x:190,y:285,w:62,h:70}];
+function norm(a){return ((a%360)+360)%360}
+function collision(nx,ny){
+ if(nx<38||nx>662||ny<48||ny>402)return true;
+ return obstacles.some(o=>nx+18>o.x&&nx-18<o.x+o.w&&ny+18>o.y&&ny-18<o.y+o.h);
+}
+function draw(message){
+ bot.setAttribute('transform',`translate(${x} ${y}) rotate(${-a})`);
+ trail.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' '));
+ $('xval').textContent=x.toFixed(1)+' px';$('yval').textContent=y.toFixed(1)+' px';
+ $('heading').textContent=norm(a)+'°';$('distance').textContent=Math.round(distance)+' px';
+ if(message)$('status').textContent=message;
+}
+function move(kind){
+ stopAuto();
+ if(kind==='left'){a=norm(a+Number($('turn').value));draw('Turned left. Heading is now '+norm(a)+'°.');return}
+ if(kind==='right'){a=norm(a-Number($('turn').value));draw('Turned right. Heading is now '+norm(a)+'°.');return}
+ const sign=kind==='back'?-1:1,step=Number($('step').value);
+ const nx=x+sign*step*Math.sin(a*Math.PI/180),ny=y-sign*step*Math.cos(a*Math.PI/180);
+ if(collision(nx,ny)){draw('Movement blocked: the robot would hit an obstacle or boundary. Turn and try again.');return}
+ distance+=Math.hypot(nx-x,ny-y);x=nx;y=ny;points.push([x,y]);
+ const reached=Math.hypot(x-635,y-75)<25;
+ draw(reached?'Goal reached! Try resetting and finding a different path.': 'Moved '+(kind==='back'?'backward':'forward')+'. Observe the path and position.');
+}
+function stopAuto(){if(timer){clearInterval(timer);timer=null}$('auto').disabled=false;$('pause').disabled=true;$('auto').textContent='▶ Auto demo'}
+$('forward').addEventListener('click',()=>move('forward'));$('back').addEventListener('click',()=>move('back'));
+$('left').addEventListener('click',()=>move('left'));$('right').addEventListener('click',()=>move('right'));
+$('step').addEventListener('input',()=> $('stepLabel').textContent=$('step').value+' px');
+$('turn').addEventListener('input',()=> $('turnLabel').textContent=$('turn').value+'°');
+$('reset').addEventListener('click',()=>{stopAuto();x=100;y=210;a=0;distance=0;points=[[x,y]];draw('Reset complete. Start a new navigation experiment.')});
+$('auto').addEventListener('click',()=>{
+ if(timer)return;$('auto').disabled=true;$('pause').disabled=false;$('status').textContent='Auto demo running. Press Pause to stop it.';
+ let n=0;timer=setInterval(()=>{if(n%5===4){a=norm(a+Number($('turn').value));draw('Auto demo: turning to change direction.')}else{const step=Number($('step').value),nx=x+step*Math.sin(a*Math.PI/180),ny=y-step*Math.cos(a*Math.PI/180);if(collision(nx,ny)){a=norm(a+90);draw('Auto demo: obstacle detected in the planned direction; turning.')}else{x=nx;y=ny;distance+=step;points.push([x,y]);draw('Auto demo: moving and checking the path.')}}n++;if(n>=30)stopAuto()},350);
+});
+$('pause').addEventListener('click',()=>{stopAuto();draw('Auto demo paused. Continue with manual controls or restart the demo.')});
+draw();
+})();
+</script>
+</body>
+</html>
